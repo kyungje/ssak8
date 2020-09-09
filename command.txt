@@ -27,20 +27,20 @@ http DELETE http://localhost:8088/customers/1
 
 //siege
 //조회
-http GET http://customer:8088/customers
-http GET http://kakao:8088/kakaos
-http GET http://customerView:8088/customerViews
+http GET http://customer:8080/customers
+http GET http://kakao:8080/kakaos
+http GET http://customerView:8080/customerViews
 //등록
-http POST http://customer:8088/customers customerName=yeon customerAddress=incheon customerAge=20
+http POST http://customer:8080/customers customerName=yeon customerAddress=incheon customerAge=20
 //등록취소
-http DELETE http://customer:8088/customers/1
+http DELETE http://customer:8080/customers/1
 
 
 //API gateway
-http GET http://:8080/customers
-http GET http://:8080/kakaos
-http GET http://:8080/customerViews
+http GET http://40.82.143.77:8080/customers
+http GET http://40.82.143.77:8080/kakaos
+http GET http://40.82.143.77:8080/customerViews
 //등록
-http POST http://:8080/customers customerName=yeon customerAddress=incheon customerAge=20
+http POST http://40.82.143.77:8080/customers customerName=yeon customerAddress=incheon customerAge=20
 //등록취소
-http DELETE http://:8080/customers/1
+http DELETE http://40.82.143.77:8080/customers/1

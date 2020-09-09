@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: kakao_dr
+  name: kakao-dr
   namespace: ssak8
 spec:
   host: kakao

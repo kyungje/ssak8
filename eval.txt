@@ -1,0 +1,12 @@
+1.saga
+2.cqrs
+3.correlation
+4.req/res
+5.gateway
+6.deploy
+7.circuit breaker
+8.autoscale
+9.zero-downtime deploy(readiness probe)
+10.configmap
+11.polyglot
+12.self-healing(liveness probe)
