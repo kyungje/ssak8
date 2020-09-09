@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ssak8-config
+  namespace: ssak8
+data:
+  api.url.kakao: http://kakao:8080

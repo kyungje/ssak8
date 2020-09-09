@@ -30,10 +30,7 @@ spring:
         event-out:
           destination: cleaningServiceydp
           contentType: application/json
-api:
-  url:
-    kakao: http://localhost:8082
-    
+
 logging:
   level:
     org.hibernate.type: trace

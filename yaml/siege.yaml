@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: siege
+  namespace: ssak8
+spec:
+  containers:
+    - name: siege
+      image: apexacme/siege-nginx

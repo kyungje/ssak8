@@ -18,16 +18,16 @@ public class CustomerViewViewHandler {
     private CustomerViewRepository customerViewRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whenCustomerRegistered_then_CREATE_1 (@Payload CustomerRegistered customerRegistered) {
+    public void whenCustomerRegistered_then_CREATE_1 (@Payload CustomerRegisterCanceled customerRegisterCanceled) {
         try {
-            if (customerRegistered.isMe()) {
+            if (customerRegisterCanceled.isMe()) {
                 // view 객체 생성
                 CustomerView customerView = new CustomerView();
                 // view 객체에 이벤트의 Value 를 set 함
-                customerView.setId(customerRegistered.getId());
-                customerView.setCustomerName(customerRegistered.getCustomerName());
-                customerView.setCustomerAddress(customerRegistered.getCustomerAddress());
-                customerView.setCustomerAge(customerRegistered.getCustomerAge());
+                customerView.setId(customerRegisterCanceled.getId());
+                customerView.setCustomerName(customerRegisterCanceled.getCustomerName());
+                customerView.setCustomerAddress(customerRegisterCanceled.getCustomerAddress());
+                customerView.setCustomerAge(customerRegisterCanceled.getCustomerAge());
                 // view 레파지 토리에 save
                 customerViewRepository.save(customerView);
             }

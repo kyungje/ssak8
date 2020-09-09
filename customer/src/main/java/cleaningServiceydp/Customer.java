@@ -1,8 +1,14 @@
 package cleaningServiceydp;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.PostPersist;
+import javax.persistence.PostRemove;
+import javax.persistence.Table;
+
 import org.springframework.beans.BeanUtils;
-import java.util.List;
 
 @Entity
 @Table(name="Customer_table")
@@ -17,26 +23,33 @@ public class Customer {
 
     @PostPersist
     public void onPostPersist(){
-        CustomerRegistered customerRegistered = new CustomerRegistered();
-        BeanUtils.copyProperties(this, customerRegistered);
-        customerRegistered.publishAfterCommit();
+    	cleaningServiceydp.external.Kakao kakao = new cleaningServiceydp.external.Kakao();
 
-        //Following code causes dependency to external APIs
-        // it is NOT A GOOD PRACTICE. instead, Event-Policy mapping is recommended.
+    	kakao.setCustomerName(getCustomerName());
+    	kakao.setCustomerAddress(getCustomerAddress());
+    	kakao.setCustomerAge(getCustomerAge());
 
-        cleaningServiceydp.external.Kakao kakao = new cleaningServiceydp.external.Kakao();
-        // mappings goes here
-        CustomerApplication.applicationContext.getBean(cleaningServiceydp.external.KakaoService.class)
-            .kakaoAlert(kakao);
+        try {
 
-
-        CustomerRegisterCanceled customerRegisterCanceled = new CustomerRegisterCanceled();
-        BeanUtils.copyProperties(this, customerRegisterCanceled);
-        customerRegisterCanceled.publishAfterCommit();
-
-
+        	CustomerApplication.applicationContext.getBean(cleaningServiceydp.external.KakaoService.class)
+            	.kakaoAlert(kakao);
+        }
+        catch(Exception e) {
+        	throw new RuntimeException("kakaoService failed. Check your kakao Service.");
+        }
     }
 
+    @PostRemove
+    public void onPostRemove(){
+    	CustomerRegisterCanceled customerRegisterCanceled = new CustomerRegisterCanceled();
+
+    	customerRegisterCanceled.setCustomerAddress(getCustomerAddress());
+    	customerRegisterCanceled.setCustomerName(getCustomerName());
+    	customerRegisterCanceled.setCustomerAge(getCustomerAge());
+
+    	BeanUtils.copyProperties(this, customerRegisterCanceled);
+        customerRegisterCanceled.publishAfterCommit();
+    }
 
     public Long getId() {
         return id;

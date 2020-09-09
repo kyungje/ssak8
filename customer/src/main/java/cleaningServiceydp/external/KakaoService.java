@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.Date;
 
-@FeignClient(name="kakaoMessage", url="http://kakaoMessage:8080")
+@FeignClient(name="kakao", url="${api.url.kakao}")
 public interface KakaoService {
 
     @RequestMapping(method= RequestMethod.POST, path="/kakaos")
