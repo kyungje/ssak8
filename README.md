@@ -812,18 +812,24 @@ kubectl apply -f kakao_na.yaml
 
 - siege 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
 ```console
+HTTP/1.1 201     0.00 secs:     259 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 201     0.01 secs:     259 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 201     0.00 secs:     259 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 201     0.01 secs:     259 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 201     0.00 secs:     259 bytes ==> POST http://customer:8080/customers
+
 Lifting the server siege...
-Transactions:                  22984 hits
-Availability:                  98.68 %
-Elapsed time:                 299.64 secs
-Data transferred:               7.52 MB
+Transactions:                  26967 hits
+Availability:                  99.07 %
+Elapsed time:                 179.05 secs
+Data transferred:               6.72 MB
 Response time:                  0.01 secs
-Transaction rate:              76.71 trans/sec
-Throughput:                     0.03 MB/sec
-Concurrency:                    0.97
-Successful transactions:       22984
-Failed transactions:             308
-Longest transaction:            0.97
+Transaction rate:             150.61 trans/sec
+Throughput:                     0.04 MB/sec
+Concurrency:                    0.98
+Successful transactions:       26967
+Failed transactions:             254
+Longest transaction:            0.58
 Shortest transaction:           0.00
 
 ```
@@ -832,36 +838,36 @@ Shortest transaction:           0.00
 - 원인은 쿠버네티스가 성급하게 새로 올려진 서비스를 READY 상태로 인식하여 서비스 유입을 진행한 것이기 때문. 이를 막기위해 Readiness Probe 를 설정함:
 ```console
 # deployment.yaml 의 readiness probe 의 설정:
-kubectl apply -f reservation.yaml
+root@ip-172-26-8-112:~/azure/ssak8/yaml# kubectl apply -f kakao.yaml
+deployment.apps/kakao configured
+service/kakao unchanged
 
-NAME                               READY   STATUS    RESTARTS   AGE
-pod/cleaning-bf474f568-vxl8r       2/2     Running   0          4h3m
-pod/dashboard-7f7768bb5-7l8wr      2/2     Running   0          4h1m
-pod/gateway-6dfcbbc84f-rwnsh       2/2     Running   0          143m
-pod/message-69597f6864-fjs69       2/2     Running   0          92m
-pod/payment-7749f7dc7c-kfjxb       2/2     Running   0          97m
-pod/reservation-775fc6574d-nfnxx   1/1     Running   0          3m54s
-pod/siege                          2/2     Running   0          5h24m
 
 ```
 - 동일한 시나리오로 재배포 한 후 Availability 확인
 ```console
+HTTP/1.1 201     0.01 secs:     259 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 201     0.00 secs:     259 bytes ==> POST http://customer:8080/customers
+
 Lifting the server siege...
-Transactions:                   6663 hits
+Transactions:                  14543 hits
 Availability:                 100.00 %
-Elapsed time:                 119.51 secs
-Data transferred:               2.17 MB
-Response time:                  0.02 secs
-Transaction rate:              55.75 trans/sec
-Throughput:                     0.02 MB/sec
+Elapsed time:                 119.40 secs
+Data transferred:               3.59 MB
+Response time:                  0.01 secs
+Transaction rate:             121.80 trans/sec
+Throughput:                     0.03 MB/sec
 Concurrency:                    0.98
-Successful transactions:        6663
+Successful transactions:       14543
 Failed transactions:               0
-Longest transaction:            0.86
+Longest transaction:            1.02
 Shortest transaction:           0.00
 ```
 
 - 배포기간 동안 Availability 가 변화없기 때문에 무정지 재배포가 성공한 것으로 확인됨.
+
+- 무정지 배포 동안 kiali 모니터링
+![무정지kiali](https://user-images.githubusercontent.com/27332622/92609381-77d96f00-f2f1-11ea-96e6-a99ebdbdcbad.JPG)
 
 ## ConfigMap 사용
 - 시스템별로 또는 운영중에 동적으로 변경 가능성이 있는 설정들을 ConfigMap을 사용하여 관리합니다.
@@ -873,40 +879,40 @@ metadata:
   name: ssak8-config
   namespace: ssak8
 data:
-  api.url.payment: http://payment:8080
+  api.url.kakao: http://kakao:8080
 ```
 
-- reservation.yaml (configmap 사용)
+- customer.yaml (configmap 사용)
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: reservation
+  name: customer
   namespace: ssak8
   labels:
-    app: reservation
+    app: customer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: reservation
+      app: customer
   template:
     metadata:
       labels:
-        app: reservation
+        app: customer
     spec:
       containers:
-        - name: reservation
-          image: ssak8acr.azurecr.io/reservation:1.0
+        - name: customer
+          image: ssak8acr.azurecr.io/customer:1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
-            - name: api.url.payment
+            - name: api.url.kakao
               valueFrom:
                 configMapKeyRef:
                   name: ssak8-config
-                  key: api.url.payment
+                  key: api.url.kakao
           readinessProbe:
             httpGet:
               path: '/actuator/health'
@@ -929,16 +935,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: reservation
+  name: customer
   namespace: ssak8
   labels:
-    app: reservation
+    app: customer
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    app: reservation
+    app: customer
 ```
 
 - configmap 설정 정보 확인
@@ -946,30 +952,18 @@ spec:
 kubectl describe pod/reservation-775fc6574d-kddgd -n ssak8
 
 ...중략
-Containers:
-  reservation:
-    Container ID:   docker://af733ea1c805029ad0baf5c448981b3b84def8e4c99656638f2560b48b14816e
-    Image:          ssak8acr.azurecr.io/reservation:1.0
-    Image ID:       docker-pullable://ssak8acr.azurecr.io/reservation@sha256:5a9eb3e1b40911025672798628d75de0670f927fccefea29688f9627742e3f6d
-    Port:           8080/TCP
-    Host Port:      0/TCP
-    State:          Running
-      Started:      Tue, 08 Sep 2020 13:24:05 +0000
-    Ready:          True
-    Restart Count:  0
+Restart Count:  0
     Liveness:       http-get http://:8080/actuator/health delay=120s timeout=2s period=5s #success=1 #failure=5
     Readiness:      http-get http://:8080/actuator/health delay=10s timeout=2s period=5s #success=1 #failure=10
     Environment:
-      api.url.payment:  <set to the key 'api.url.payment' of config map 'ssak8-config'>  Optional: false
+      api.url.kakao:  <set to the key 'api.url.kakao' of config map 'ssak8-config'>  Optional: false
     Mounts:
-      /var/run/secrets/kubernetes.io/serviceaccount from default-token-w4fh5 (ro)
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-wwtjp (ro)
+  istio-proxy:
+    Container ID:  docker://29233d46daf3e2137966d519f821c8758aa4750ad7112e0c9f863edd87f7a932
+    Image:         docker.io/istio/proxyv2:1.4.5
+    Image ID:      docker-pullable://istio/proxyv2@sha256:fc09ea0f969147a4843a564c5b677fbf3a6f94b56627d00b313b4c30d5fef094
+    Port:          15090/TCP
+    Host Port:     0/TCP
 ...중략
 ```
-
-
-# 개인 MSA
-1. 고객관리 (이름, 주소 등등) => 연제경 
-2. 청소부 관리 (이름, 핸드폰 번호 등등) => 노필호
-3. 청소부 리뷰관리 (리뷰, 별점평가 등등) => 성은주
-4. 고객 리뷰관리 (리뷰, 별점평가 등등) => 채민호
-5. 결제 관리 (카드, 무통장 등등) => 박유리
