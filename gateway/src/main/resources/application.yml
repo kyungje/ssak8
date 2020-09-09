@@ -16,7 +16,7 @@ spring:
           uri: http://localhost:8082
           predicates:
             - Path=/kakaos/** 
-        - id: customerView
+        - id: customerview
           uri: http://localhost:8083
           predicates:
             - Path= /customerViews/**
@@ -47,8 +47,8 @@ spring:
           uri: http://kakao:8080
           predicates:
             - Path=/kakaos/** 
-        - id: customerView
-          uri: http://customerView:8080
+        - id: customerview
+          uri: http://customerview:8080
           predicates:
             - Path= /customerViews/**
       globalcors:

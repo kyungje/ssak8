@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: customerView
+  name: customerview
   namespace: ssak8
   labels:
-    app: customerView
+    app: customerview
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: customerView
+      app: customerview
   template:
     metadata:
       labels:
-        app: customerView
+        app: customerview
     spec:
       containers:
-        - name: customerView
+        - name: customerview
           image: ssak8acr.azurecr.io/customerview:1.0
           imagePullPolicy: Always
           ports:
@@ -43,13 +43,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: customerView
+  name: customerview
   namespace: ssak8
   labels:
-    app: customerView
+    app: customerview
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    app: customerView
+    app: customerview
