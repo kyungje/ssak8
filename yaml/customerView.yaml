@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: customerView
-          image: ssak8acr.azurecr.io/customerView:1.0
+          image: ssak8acr.azurecr.io/customerview:1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
