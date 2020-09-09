@@ -479,6 +479,70 @@ http GET http://40.82.143.77:8080/customerViews
 http POST http://40.82.143.77:8080/customers customerName=yeon customerAddress=incheon customerAge=20
 //등록취소
 http DELETE http://40.82.143.77:8080/customers/1
+
+
+
+C:\azure\cleaningServiceydp>http GET http://40.82.143.77:8080/customerViews
+HTTP/1.1 200 OK
+content-type: application/hal+json;charset=UTF-8
+date: Wed, 09 Sep 2020 14:20:32 GMT
+server: envoy
+transfer-encoding: chunked
+x-envoy-upstream-service-time: 11
+
+{
+    "_embedded": {
+        "customerViews": [
+            {
+                "_links": {
+                    "customerView": {
+                        "href": "http://customerView:8080/customerViews/1"
+                    },
+                    "self": {
+                        "href": "http://customerView:8080/customerViews/1"
+                    }
+                },
+                "customerAddress": "incheon",
+                "customerAge": 20,
+                "customerName": "yeon"
+            },
+            {
+                "_links": {
+                    "customerView": {
+                        "href": "http://customerView:8080/customerViews/2"
+                    },
+                    "self": {
+                        "href": "http://customerView:8080/customerViews/2"
+                    }
+                },
+                "customerAddress": "incheon",
+                "customerAge": 20,
+                "customerName": "yeon"
+            },
+            {
+                "_links": {
+                    "customerView": {
+                        "href": "http://customerView:8080/customerViews/3"
+                    },
+                    "self": {
+                        "href": "http://customerView:8080/customerViews/3"
+                    }
+                },
+                "customerAddress": "incheon",
+                "customerAge": 20,
+                "customerName": "yeon"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://customerView:8080/profile/customerViews"
+        },
+        "self": {
+            "href": "http://customerView:8080/customerViews"
+        }
+    }
+}
 ```
 
 - siege 접속
