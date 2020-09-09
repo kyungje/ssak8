@@ -1,0 +1,66 @@
+server:
+  port: 8088
+
+---
+
+spring:
+  profiles: default
+  cloud:
+    gateway:
+      routes:
+        - id: customer
+          uri: http://localhost:8081
+          predicates:
+            - Path=/customers/** 
+        - id: kakaoMessage
+          uri: http://localhost:8082
+          predicates:
+            - Path=/kakaos/** 
+        - id: customerView
+          uri: http://localhost:8083
+          predicates:
+            - Path= /customerViews/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+
+---
+
+spring:
+  profiles: docker
+  cloud:
+    gateway:
+      routes:
+        - id: customer
+          uri: http://customer:8080
+          predicates:
+            - Path=/customers/** 
+        - id: kakaoMessage
+          uri: http://kakaoMessage:8080
+          predicates:
+            - Path=/kakaos/** 
+        - id: customerView
+          uri: http://customerView:8080
+          predicates:
+            - Path= /customerViews/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+server:
+  port: 8080
