@@ -45,6 +45,7 @@
   ![4](https://user-images.githubusercontent.com/69634194/92545590-72493e00-f28b-11ea-847d-4afdd801020e.png)
 
 ## Event Storming 결과
+![모델링](https://user-images.githubusercontent.com/27332622/92610554-c76c6a80-f2f2-11ea-9dc7-fa7a828dd06d.JPG)
 * MSAEz 로 모델링한 이벤트스토밍 결과 : http://www.msaez.io/#/storming/k1eXHY4YSrSFKU3UpQTDRHUvSS23/mine/a2c3fea59b264b6c89b743b50424dc6e/-MGlhpIKpdgJUgaz2zuN
 
   
