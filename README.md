@@ -603,38 +603,33 @@ Shortest transaction:           0.01
 ```
 * 서킷 브레이킹을 위한 DestinationRule 적용
 ```
-cd ssak8/yaml
-kubectl apply -f kakao_dr.yaml
+root@ip-172-26-8-112:~/azure/ssak8/yaml# kubectl apply -f kakao_dr.yaml
+destinationrule.networking.istio.io/kakao-dr created
 
-# destinationrule.networking.istio.io/dr-payment created
-
-HTTP/1.1 500     0.68 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
-HTTP/1.1 500     0.70 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
-HTTP/1.1 500     0.71 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
-HTTP/1.1 500     0.72 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
-HTTP/1.1 500     0.92 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
-HTTP/1.1 500     0.68 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
-HTTP/1.1 500     0.82 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
-HTTP/1.1 500     0.71 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 500     0.46 secs:     251 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 500     0.53 secs:     251 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 500     0.45 secs:     251 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 500     0.38 secs:     251 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 500     0.41 secs:     251 bytes ==> POST http://customer:8080/customers
 siege aborted due to excessive socket failure; you
 can change the failure threshold in $HOME/.siegerc
 
-Transactions:                     20 hits
-Availability:                   1.75 %
-Elapsed time:                   9.92 secs
-Data transferred:               0.29 MB
-Response time:                 48.04 secs
-Transaction rate:               2.02 trans/sec
-Throughput:                     0.03 MB/sec
-Concurrency:                   96.85
-Successful transactions:          20
+Transactions:                    571 hits
+Availability:                  33.71 %
+Elapsed time:                   9.70 secs
+Data transferred:               0.41 MB
+Response time:                  1.66 secs
+Transaction rate:              58.87 trans/sec
+Throughput:                     0.04 MB/sec
+Concurrency:                   97.94
+Successful transactions:         571
 Failed transactions:            1123
-Longest transaction:            2.53
-Shortest transaction:           0.04
+Longest transaction:            2.47
+Shortest transaction:           0.02
 ```
 
 - DestinationRule 적용되어 서킷 브레이킹 동작 확인 (kiali 화면)
-  ![kiali2](https://user-images.githubusercontent.com/69634194/92505880-94b56a00-f23f-11ea-9b10-b1e43e195ca2.png)
+  ![kiali서킷](https://user-images.githubusercontent.com/27332622/92605498-c5071200-f2ec-11ea-87d1-6c04004f0b93.JPG)
 
 ## 오토스케일 아웃
 앞서 CB 는 시스템을 안정되게 운영할 수 있게 해줬지만 사용자의 요청을 100% 받아들여주지 못했기 때문에 이에 대한 보완책으로 자동화된 확장 기능을 적용하고자 함
@@ -644,10 +639,9 @@ kubectl label namespace ssak8 istio-injection=disabled --overwrite
 
 # namespace/ssak8 labeled
 
-kubectl apply -f reservation.yaml
-kubectl apply -f payment.yaml
+kubectl apply -f kakao.yaml
 ```
-- 결제서비스 배포시 resource 설정 적용되어 있음
+- kakao 서비스 배포시 resource 설정 적용되어 있음
 ```
     spec:
       containers:
@@ -659,125 +653,118 @@ kubectl apply -f payment.yaml
               cpu: 200m
 ```
 
-- 결제서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 15프로를 넘어서면 replica 를 3개까지 늘려준다
+- kakao 서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 15프로를 넘어서면 replica 를 3개까지 늘려준다
 ```console
-kubectl autoscale deploy payment -n ssak8 --min=1 --max=3 --cpu-percent=15
+kubectl autoscale deploy kakao -n ssak8 --min=1 --max=3 --cpu-percent=15
 
 # horizontalpodautoscaler.autoscaling/payment autoscaled
 
-root@ssak8-vm:~/ssak8/yaml# kubectl get all -n ssak8
-NAME                               READY   STATUS    RESTARTS   AGE
-pod/cleaning-bf474f568-vxl8r       2/2     Running   0          3h5m
-pod/dashboard-7f7768bb5-7l8wr      2/2     Running   0          3h3m
-pod/gateway-6dfcbbc84f-rwnsh       2/2     Running   0          85m
-pod/message-69597f6864-fjs69       2/2     Running   0          34m
-pod/payment-7749f7dc7c-kfjxb       2/2     Running   0          39m
-pod/reservation-775fc6574d-kddgd   2/2     Running   0          3h12m
-pod/siege                          2/2     Running   0          4h27m
+root@ip-172-26-8-112:~/azure/ssak8/yaml# kubectl get all -n ssak8
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/customer-84d6ff6f64-jw5ws       2/2     Running   0          139m
+pod/customerview-775c799657-wk4tg   2/2     Running   0          128m
+pod/gateway-5b94cd5c4d-59r52        2/2     Running   0          139m
+pod/kakao-69c8d67649-t958w          2/2     Running   0          22m
+pod/siege                           2/2     Running   0          145m
 
-NAME                  TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)          AGE
-service/cleaning      ClusterIP      10.0.150.114   <none>         8080/TCP         3h5m
-service/dashboard     ClusterIP      10.0.69.44     <none>         8080/TCP         3h3m
-service/gateway       LoadBalancer   10.0.56.218    20.196.72.75   8080:32642/TCP   85m
-service/message       ClusterIP      10.0.255.90    <none>         8080/TCP         34m
-service/payment       ClusterIP      10.0.64.167    <none>         8080/TCP         39m
-service/reservation   ClusterIP      10.0.23.111    <none>         8080/TCP         3h12m
+NAME                   TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)          AGE
+service/customer       ClusterIP      10.0.96.14    <none>         8080/TCP         139m
+service/customerview   ClusterIP      10.0.48.174   <none>         8080/TCP         128m
+service/gateway        LoadBalancer   10.0.147.77   40.82.143.77   8080:31431/TCP   139m
+service/kakao          ClusterIP      10.0.185.59   <none>         8080/TCP         22m
 
-NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/cleaning      1/1     1            1           3h5m
-deployment.apps/dashboard     1/1     1            1           3h3m
-deployment.apps/gateway       1/1     1            1           85m
-deployment.apps/message       1/1     1            1           34m
-deployment.apps/payment       1/1     1            1           39m
-deployment.apps/reservation   1/1     1            1           3h12m
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/customer       1/1     1            1           139m
+deployment.apps/customerview   1/1     1            1           128m
+deployment.apps/gateway        1/1     1            1           139m
+deployment.apps/kakao          1/1     1            1           22m
 
-NAME                                     DESIRED   CURRENT   READY   AGE
-replicaset.apps/cleaning-bf474f568       1         1         1       3h5m
-replicaset.apps/dashboard-7f7768bb5      1         1         1       3h3m
-replicaset.apps/gateway-6dfcbbc84f       1         1         1       85m
-replicaset.apps/message-69597f6864       1         1         1       34m
-replicaset.apps/payment-7749f7dc7c       1         1         1       39m
-replicaset.apps/reservation-775fc6574d   1         1         1       3h12m
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/customer-84d6ff6f64       1         1         1       139m
+replicaset.apps/customerview-775c799657   1         1         1       128m
+replicaset.apps/gateway-5b94cd5c4d        1         1         1       139m
+replicaset.apps/kakao-69c8d67649          1         1         1       22m
 
-NAME                                          REFERENCE            TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-horizontalpodautoscaler.autoscaling/payment   Deployment/payment   3%/15%    1         3         1          55s
+NAME                                        REFERENCE          TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/kakao   Deployment/kakao   3%/15%    1         3         1          17s
 ```
 
 - CB 에서 했던 방식대로 워크로드를 3분 동안 걸어준다.
 ```console
-siege -v -c100 -t180S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
+siege -v -c100 -t180S -r10 --content-type "application/json" 'http://customer:8080/customers POST {"customerName": "yeon","customerAddress": "incheon","customerAge": 20}'
 ```
 
 - 오토스케일이 어떻게 되고 있는지 모니터링을 걸어둔다
 ```console
-kubectl get deploy payment -n ssak8 -w 
-
-NAME      READY   UP-TO-DATE   AVAILABLE   AGE
-payment   1/1     1            1           43m
+kubectl get deploy kakao -n ssak8 -w 
 
 # siege 부하 적용 후
-root@ssak8-vm:/# kubectl get deploy payment -n ssak8 -w
-NAME      READY   UP-TO-DATE   AVAILABLE   AGE
-payment   1/1     1            1           43m
-payment   1/3     1            1           44m
-payment   1/3     1            1           44m
-payment   1/3     3            1           44m
-payment   2/3     3            2           46m
-payment   3/3     3            3           46m
+root@ip-172-26-8-112:/# kubectl get deploy kakao -n ssak8 -w 
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+kakao   1/3     3            1           25m
+kakao   2/3     3            2           26m
+kakao   3/3     3            3           26m
 ```
 - siege 의 로그를 보아도 전체적인 성공률이 높아진 것을 확인 할 수 있다.
 ```console
-Lifting the server siege...
-Transactions:                  19309 hits
-Availability:                 100.00 %
-Elapsed time:                 179.75 secs
-Data transferred:               6.31 MB
-Response time:                  0.92 secs
-Transaction rate:             107.42 trans/sec
-Throughput:                     0.04 MB/sec
-Concurrency:                   99.29
-Successful transactions:       19309
-Failed transactions:               0
-Longest transaction:            7.33
-Shortest transaction:           0.01
-```
+HTTP/1.1 201     0.32 secs:     259 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 201     0.11 secs:     259 bytes ==> POST http://customer:8080/customers
+HTTP/1.1 201     0.11 secs:     259 bytes ==> POST http://customer:8080/customers
 
-## 무정지 재배포 (readiness)
+Lifting the server siege...
+Transactions:                  45204 hits
+Availability:                 100.00 %
+Elapsed time:                 179.66 secs
+Data transferred:              11.17 MB
+Response time:                  0.39 secs
+Transaction rate:             251.61 trans/sec
+Throughput:                     0.06 MB/sec
+Concurrency:                   97.82
+Successful transactions:       45204
+Failed transactions:               0
+Longest transaction:            4.66
+Shortest transaction:           0.00
+```
+- 오토스케일 아웃시 kiali 모니터링
+ ![kiali오토](https://user-images.githubusercontent.com/27332622/92607057-98ec9080-f2ee-11ea-90b8-5c4d6158e7a5.JPG)
+
+
+## 무정지 재배포 (readiness, liveness)
 - 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 CB 설정을 제거함 (위의 시나리오에서 제거되었음)
 ```console
-kubectl delete horizontalpodautoscaler.autoscaling/payment -n ssak8
+kubectl delete horizontalpodautoscaler.autoscaling/kakao -n ssak8
 ```
 - yaml 설정 참고
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: reservation
+  name: customer
   namespace: ssak8
   labels:
-    app: reservation
+    app: customer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: reservation
+      app: customer
   template:
     metadata:
       labels:
-        app: reservation
+        app: customer
     spec:
       containers:
-        - name: reservation
-          image: ssak8acr.azurecr.io/reservation:1.0
+        - name: customer
+          image: ssak8acr.azurecr.io/customer:1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
-            - name: api.url.payment
+            - name: api.url.kakao
               valueFrom:
                 configMapKeyRef:
                   name: ssak8-config
-                  key: api.url.payment
+                  key: api.url.kakao
           readinessProbe:
             httpGet:
               path: '/actuator/health'
@@ -800,27 +787,27 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: reservation
+  name: customer
   namespace: ssak8
   labels:
-    app: reservation
+    app: customer
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    app: reservation
+    app: customer
 ```
 
 - siege 로 배포작업 직전에 워크로드를 모니터링 함.
 ```console
-siege -v -c1 -t120S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
+siege -v -c1 -t180S -r10 --content-type "application/json" 'http://customer:8080/customers POST {"customerName": "yeon","customerAddress": "incheon","customerAge": 20}'
 ```
 
 - 새버전으로의 배포 시작
 ```
 # 컨테이너 이미지 Update (readness, liveness 미설정 상태)
-kubectl apply -f reservation_na.yaml
+kubectl apply -f kakao_na.yaml
 ```
 
 - siege 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
